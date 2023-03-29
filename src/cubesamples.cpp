@@ -3,14 +3,14 @@
 /******************************************************/
 
 #include "Particle.h"
-#line 1 "c:/SRC/cubetube/cubesamples/src/test.ino"
+#line 1 "c:/SRC/cubetube/cubesamples/src/cubesamples.ino"
 uint8_t intensity(uint32_t dn);
 void setup();
 static void sample1();
 static void sample2();
 static void sample();
 void loop();
-#line 1 "c:/SRC/cubetube/cubesamples/src/test.ino"
+#line 1 "c:/SRC/cubetube/cubesamples/src/cubesamples.ino"
 SYSTEM_MODE(MANUAL);
 
 #include "L3D.h"
