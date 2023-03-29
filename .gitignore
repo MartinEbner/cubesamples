@@ -33,3 +33,6 @@
 
 # Target folder
 target/**
+
+# Generated cpp files
+src/*.cpp

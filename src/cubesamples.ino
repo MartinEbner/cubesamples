@@ -4,16 +4,19 @@ SYSTEM_MODE(MANUAL);
 #include <stdint.h>
 #include <math.h>
 
-#define SAMPLE 1
+#define SAMPLE 2
 
 #define N 8
 #define C 50
 #define min(a,b) (a < b ? a : b)
 #define CSHIFT(c,s) (unsigned char)((c + s)%C + C_MIN)
 #define PULSE_NORM(c,pulse) ((uint8_t)((uint32_t)(c) * (uint32_t)(pulse) / C))
+#define NORM(c) ((uint8_t)((uint32_t)(c) * (uint32_t)C / (uint32_t)UINT8_MAX))
 #define TABLE_SIZE 1024
 #define PI 3.14159265358979323846
 #define C_MIN 5
+#define HZ_TO_US(f) (uint32_t)((float)1000000.0 / (float)(f))
+#define T_SCHUMANN_RESONANCE HZ_TO_US(7.83)
 
 Cube cube=Cube(N,C);
 static int32_t statSineTable[TABLE_SIZE];
@@ -102,13 +105,32 @@ static void sample2()
   static Pulse pulseRed;
   static Pulse pulseGreen;
   static Pulse pulseBlue;
-  uint8_t intensity = pulseIntensity.intensity(3*7);
-  Color color       = Color(PULSE_NORM(pulseRed.intensity(1), intensity),
-                            PULSE_NORM(pulseGreen.intensity(3), intensity),
-                            PULSE_NORM(pulseBlue.intensity(7), intensity));
-  cube.background(color);
+  static Color const* colors[] = {&blue, &grey, &yellow, &magenta, &orange, &teal, &red, &brown, &pink, &blue, &green, &purple, &white};
+  static uint8_t numColors = sizeof(colors) / sizeof(colors[0]);
+  static uint32_t colorIdx = 0;
+  Color color;
+  for (int x = 0; x < N; x++)
+    for (int y = 0; y < N; y++)
+      for (int z = 0; z < N; z++)
+      {
+        if (((x + y + z) % 2) == 0)
+        {
+          Color const* c = colors[colorIdx % numColors];
+          color = Color(NORM(c->red), NORM(c->green), NORM(c->blue));
+        }
+        else
+        {
+          Color const* c = colors[(colorIdx + 1) % numColors];
+          color = Color(NORM(c->red), NORM(c->green), NORM(c->blue));
+        }
+        cube.setVoxel(x, y, z, color);
+      }
 	cube.show();
-	delay(30);
+  /* Color const* c = colors[colorIdx % numColors];
+  Serial.printlnf("color %lu, RGB %02x %02x %02x ", colorIdx % numColors, NORM(c->red), NORM(c->green), NORM(c->blue));
+  Serial.printlnf("T_SCHUMANN_RESONANCE = %lu", T_SCHUMANN_RESONANCE); */
+	delayMicroseconds(T_SCHUMANN_RESONANCE);
+  colorIdx++;
 }
 
 static void sample()
@@ -131,8 +153,8 @@ void loop()
   if (isFirstCycle)
   {
     isFirstCycle = false;
-    delay(500);
-    Serial.printlnf("cubesample SAMPLE=%d", SAMPLE);
+    delay(1000);
+    Serial.printlnf("cubesample SAMPLE=%d, built at %s", SAMPLE, __DATE__ " " __TIME__);
   }
   sample();
 }
